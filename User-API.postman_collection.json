@@ -1,0 +1,211 @@
+{
+  "info": {
+    "name": "User CRUD + Search Tests",
+    "_postman_id": "c4fc8a04-a90e-4db8-8a4b-564390fc9506",
+    "description": "CRUD & search tests for /api/v1/users",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "userId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0) List - default (page=1, limit=10)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.code === 200);",
+              "const res = pm.response.json();",
+              "pm.expect(res.success).to.eql(true);",
+              "pm.expect(res.data).to.have.property('content');",
+              "pm.expect(res.data.page).to.eql(1);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1) Create - success",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tester User\",\n  \"salary\": 7777.77,\n  \"age\": 27\n}"
+        },
+        "url": "{{baseUrl}}/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.code === 201);",
+              "const res = pm.response.json();",
+              "pm.expect(res.success).to.eql(true);",
+              "pm.expect(res.data).to.have.property('id');",
+              "pm.collectionVariables.set('userId', res.data.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2) Get by ID - success",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/users/{{userId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.code === 200);",
+              "const res = pm.response.json();",
+              "pm.expect(res.data.id).to.eql(parseInt(pm.collectionVariables.get('userId')));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3) Update - success",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tester User Updated\",\n  \"salary\": 8888.88,\n  \"age\": 28\n}"
+        },
+        "url": "{{baseUrl}}/users/{{userId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.code === 200);",
+              "const res = pm.response.json();",
+              "pm.expect(res.data.name).to.eql('Tester User Updated');",
+              "pm.expect(res.data.salary).to.eql(8888.88);",
+              "pm.expect(res.data.age).to.eql(28);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4) Search - name & ranges",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/users?name=Nguyen&minSalary=3000&maxSalary=12000&minAge=20&maxAge=40&sortBy=salary&sortDir=asc"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.code === 200);",
+              "const res = pm.response.json();",
+              "pm.expect(res.success).to.eql(true);",
+              "pm.expect(res.data).to.have.property('content');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5) Create - 400 Bad Request (name blank)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"  \",\n  \"salary\": 1000.0,\n  \"age\": 20\n}"
+        },
+        "url": "{{baseUrl}}/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 400', () => pm.response.code === 400);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6) Delete - 204 No Content",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/users/{{userId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204', () => pm.response.code === 204);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7) Get by ID - 404 after delete",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/users/{{userId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 404', () => pm.response.code === 404);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
